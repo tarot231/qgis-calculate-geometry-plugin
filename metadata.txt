@@ -1,0 +1,13 @@
+[general]
+name=Calculate Geometry
+qgisMinimumVersion=2.14
+qgisMaximumVersion=2.18
+description=Calculate area, length in arbitrary units
+about=Calculate area, length in arbitrary units. The state of "on-the-fly CRS transformation" does not affect the calculation result.
+version=0.1
+author=Tarot Osuji
+email=tarot@sdf.lonestar.org
+tags=calculator, geometry
+homepage=https://plugins.qgis.org/plugins/CalculateGeometry/
+repository=https://github.com/tarot231/CalculateGeometry
+tracker=https://github.com/tarot231/CalculateGeometry/issues
