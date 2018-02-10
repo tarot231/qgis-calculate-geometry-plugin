@@ -22,9 +22,9 @@
 """
 
 try:
-    from PyQt4.QtGui import *
-except:
     from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
 
 
 class CalculateGeometryDialog(QDialog):
@@ -35,15 +35,10 @@ class CalculateGeometryDialog(QDialog):
         self.comboBox_field = QComboBox()
         self.comboBox_units = QComboBox()
 
-        grid = QGridLayout()
-        grid.addWidget(QLabel('Property:'), 0, 0)
-        grid.addWidget(QLabel('Field:'), 1, 0)
-        grid.addWidget(QLabel('Units:'), 2, 0)
-        grid.addWidget(self.comboBox_property, 0, 2)
-        grid.addWidget(self.comboBox_field, 1, 2)
-        grid.addWidget(self.comboBox_units, 2, 2)
-        grid.setColumnStretch(1, 1)
-        grid.setColumnStretch(2, 4)
+        form = QFormLayout()
+        form.addRow(self.tr('&Property:'), self.comboBox_property)
+        form.addRow(self.tr('&Field:'), self.comboBox_field)
+        form.addRow(self.tr('&Units:'), self.comboBox_units)
 
         buttonBox = QDialogButtonBox(accepted=self.accept,
                                      rejected=self.reject)
@@ -51,10 +46,10 @@ class CalculateGeometryDialog(QDialog):
                                      QDialogButtonBox.Ok)
 
         vbox = QVBoxLayout()
-        vbox.addLayout(grid)
+        vbox.addLayout(form)
         vbox.addWidget(buttonBox)
 
-        self.setWindowTitle('Calculate Geometry')
+        self.setWindowTitle(self.tr('Calculate Geometry'))
         self.setModal(True)
         self.setLayout(vbox)
 

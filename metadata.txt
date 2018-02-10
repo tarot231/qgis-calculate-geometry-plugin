@@ -2,12 +2,12 @@
 name=Calculate Geometry
 qgisMinimumVersion=2.14
 qgisMaximumVersion=2.18
-description=Calculate area, length in arbitrary units
-about=Calculate area, length in arbitrary units. The state of "on-the-fly CRS transformation" does not affect the calculation result.
-version=0.1
+description=Calculate area, length, in arbitrary units, without typing expressions
+about=This plugin calculates the area of the polygon and the length of the line, in arbitrary units. Compared to using field calculator, you don't need to type calculation expressions, so you can get results with fewer steps. Even if OTF is enabled, it doesn't affect the calculation result (see bug report #14675).
+version=0.2
 author=Tarot Osuji
 email=tarot@sdf.lonestar.org
 tags=calculator, geometry
-homepage=https://plugins.qgis.org/plugins/CalculateGeometry/
+homepage=https://plugins.qgis.org/plugins/CalculateGeometry
 repository=https://github.com/tarot231/CalculateGeometry
 tracker=https://github.com/tarot231/CalculateGeometry/issues
