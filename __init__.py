@@ -23,5 +23,5 @@
 """
 
 def classFactory(iface):
-    from CalculateGeometry import CalculateGeometry
+    from .CalculateGeometry import CalculateGeometry
     return CalculateGeometry(iface)
