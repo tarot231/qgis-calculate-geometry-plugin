@@ -22,13 +22,12 @@
 """
 
 import os
-try:
-    from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication
-    from PyQt5.QtWidgets import QAction
-except:
-    from PyQt4.QtCore import QSettings, QTranslator, QCoreApplication
-    from PyQt4.QtGui import QAction
 from qgis.core import *
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
+try:
+    from qgis.PyQt.QtWidgets import QAction
+except:
+    from qgis.PyQt.QtGui import QAction
 from .CalculateGeometryDialog import CalculateGeometryDialog
 
 
@@ -60,9 +59,7 @@ class CalculateGeometry:
         self.dialog = CalculateGeometryDialog()
         self.dialog.comboBox_property.currentIndexChanged.connect(self.property_changed)
 
-        self.action = QAction(self.tr('&Calculate Geometry...'),
-                self.iface.mainWindow() if self.qgis_version >= 29900
-                else self.iface.legendInterface())
+        self.action = QAction(self.tr('&Calculate Geometry...'), self.iface.mainWindow())
         self.action.triggered.connect(self.run)
 
         if self.qgis_version >= 29900:
@@ -107,22 +104,30 @@ class CalculateGeometry:
                                        self.tr('Miles')]
         self.AreaUnits += [None]
 
+        self.iface.mapCanvas().currentLayerChanged.connect(self.current_layer_changed)
+
     def unload(self):
+        self.iface.mapCanvas().currentLayerChanged.disconnect(self.current_layer_changed)
         if self.qgis_version >= 29900:
             self.iface.removeCustomActionForLayerType(self.action)
         else:
             self.iface.legendInterface().removeLegendLayerAction(self.action)
+
+    def current_layer_changed(self, layer):
+        if layer.__class__.__name__ == 'QgsVectorLayer':
+            dp = layer.dataProvider()
+            self.action.setEnabled(bool(dp.capabilities() & dp.ChangeAttributeValues)
+                                   and (not layer.readOnly()))
 
     def run(self):
         self.dialog.comboBox_property.clear()
         self.dialog.comboBox_field.clear()
         self.dialog.comboBox_units.clear()
 
-        layer = (self.iface.activeLayer() if self.qgis_version >= 29900
-                else self.iface.legendInterface().currentLayer())
+        layer = self.iface.mapCanvas().currentLayer()
         if layer.geometryType() == self.Point:
             self.iface.messageBar().pushWarning(
-                    self.tr('Warning'), self.tr('Point is not supported'))
+                    layer.name(), self.tr('Point is not supported'))
             return
         elif layer.geometryType() == self.Line:
             self.dialog.comboBox_property.addItems([self.tr('Length')])
@@ -130,11 +135,11 @@ class CalculateGeometry:
             self.dialog.comboBox_property.addItems([self.tr('Area'), self.tr('Perimeter')])
         else:
             self.iface.messageBar().pushWarning(
-                    self.tr('Warning'), self.tr('Unknown geometry type'))
+                    layer.name(), self.tr('Unknown geometry type'))
             return
         if layer.fields().count() == 0:
             self.iface.messageBar().pushWarning(
-                    self.tr('Warning'), self.tr('No fields in the layer'))
+                    layer.name(), self.tr('No fields in the layer'))
             return
         self.dialog.comboBox_field.addItems(
                 [x.name() for x in layer.fields()])
@@ -164,8 +169,7 @@ class CalculateGeometry:
                     res = da.measureLength(f.geometry())
                     res = da.convertLengthMeasurement(res, self.DistanceUnits.index(units))
                 else:
-                    self.iface.messageBar().pushWarning(
-                            self.tr('Warning'), self.tr('{} property is not supported').format(property))
+                    raise ValueError('"{}" property is not supported'.format(property))
                 f[field] = res
                 layer.updateFeature(f)
 
@@ -173,8 +177,7 @@ class CalculateGeometry:
         if self.dialog.comboBox_property.currentIndex() == -1:
             return
         if self.dialog.comboBox_units.currentIndex() != -1:
-            if ((self.iface.activeLayer().geometryType() != self.Polygon) if self.qgis_version >= 29900
-                    else (self.iface.legendInterface().currentLayer().geometryType() != self.Polygon)):
+            if self.iface.mapCanvas().currentLayer().geometryType() != self.Polygon:
                 return
 
         self.dialog.comboBox_units.clear()
@@ -184,9 +187,13 @@ class CalculateGeometry:
             idx = proj.areaUnits()
             if self.AreaUnits[idx] is None:
                 if self.qgis_version >= 29900:
-                    idx = 8 if self.iface.mapCanvas().mapUnits() == 6 else 0
+                    idx = (QgsUnitTypes.AreaSquareDegrees
+                           if self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceDegrees
+                           else QgsUnitTypes.AreaSquareMeters)
                 else:
-                    idx = 8 if self.iface.mapCanvas().mapUnits() == 2 else 0
+                    idx = (QgsUnitTypes.SquareDegrees
+                           if self.iface.mapCanvas().mapUnits() == QGis.Degrees
+                           else QgsUnitTypes.SquareMeters)
             self.dialog.comboBox_units.setCurrentIndex(idx)
         else:
             self.dialog.comboBox_units.addItems(self.DistanceUnits)

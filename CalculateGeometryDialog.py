@@ -22,9 +22,9 @@
 """
 
 try:
-    from PyQt5.QtWidgets import *
+    from qgis.PyQt.QtWidgets import *
 except:
-    from PyQt4.QtGui import *
+    from qgis.PyQt.QtGui import *
 
 
 class CalculateGeometryDialog(QDialog):
