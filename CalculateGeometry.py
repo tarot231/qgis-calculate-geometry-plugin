@@ -23,7 +23,7 @@
 
 import os
 from qgis.core import *
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
+from qgis.PyQt.QtCore import QSettings, QLocale, QTranslator, QCoreApplication
 try:
     from qgis.PyQt.QtWidgets import QAction
 except:
@@ -44,13 +44,17 @@ class CalculateGeometry:
                 QgsWkbTypes.PolygonGeometry) if self.qgis_version >= 29900
                 else (QGis.Point, QGis.Line, QGis.Polygon))
 
-        locale = QSettings().value('locale/userLocale')
-        locale_path = os.path.join(
-                os.path.dirname(__file__),
-                'i18n', locale)
-        self.translator = QTranslator()
-        if self.translator.load(locale_path):
-            QCoreApplication.installTranslator(self.translator)
+        if QSettings().value('locale/overrideFlag', type=bool):
+            locale = QSettings().value('locale/userLocale')
+        else:
+            locale = QLocale.system().name()
+        if locale:
+            locale_path = os.path.join(
+                    os.path.dirname(__file__),
+                    'i18n', locale)
+            self.translator = QTranslator()
+            if self.translator.load(locale_path):
+                QCoreApplication.installTranslator(self.translator)
 
     def tr(self, message):
         return QCoreApplication.translate(self.__class__.__name__, message)
@@ -117,7 +121,8 @@ class CalculateGeometry:
         if layer.__class__.__name__ == 'QgsVectorLayer':
             dp = layer.dataProvider()
             self.action.setEnabled(bool(dp.capabilities() & dp.ChangeAttributeValues)
-                                   and (not layer.readOnly()))
+                                   and (not layer.readOnly())
+                                   and (layer.geometryType() != self.Point))
 
     def run(self):
         self.dialog.comboBox_property.clear()
@@ -125,21 +130,17 @@ class CalculateGeometry:
         self.dialog.comboBox_units.clear()
 
         layer = self.iface.mapCanvas().currentLayer()
-        if layer.geometryType() == self.Point:
-            self.iface.messageBar().pushWarning(
-                    layer.name(), self.tr('Point is not supported'))
-            return
-        elif layer.geometryType() == self.Line:
+        if layer.geometryType() == self.Line:
             self.dialog.comboBox_property.addItems([self.tr('Length')])
         elif layer.geometryType() == self.Polygon:
             self.dialog.comboBox_property.addItems([self.tr('Area'), self.tr('Perimeter')])
         else:
-            self.iface.messageBar().pushWarning(
-                    layer.name(), self.tr('Unknown geometry type'))
+            self.iface.messageBar().pushCritical(
+                    self.tr('Unsupported geometry type'), layer.name())
             return
         if layer.fields().count() == 0:
-            self.iface.messageBar().pushWarning(
-                    layer.name(), self.tr('No fields in the layer'))
+            self.iface.messageBar().pushCritical(
+                    self.tr('No fields in the layer'), layer.name())
             return
         self.dialog.comboBox_field.addItems(
                 [x.name() for x in layer.fields()])

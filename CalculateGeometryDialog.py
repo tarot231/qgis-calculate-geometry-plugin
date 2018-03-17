@@ -62,4 +62,4 @@ if __name__ == '__main__':
     dialog.comboBox_field.addItems(['length'])
     dialog.comboBox_units.addItems(['Meters'])
     dialog.show()
-    sys.exit(dialog.exec_())
+    sys.exit(app.exec_())
