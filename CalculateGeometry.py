@@ -22,12 +22,9 @@
 """
 
 import os
-from qgis.core import *
 from qgis.PyQt.QtCore import QSettings, QLocale, QTranslator, QCoreApplication
-try:
-    from qgis.PyQt.QtWidgets import QAction
-except:
-    from qgis.PyQt.QtGui import QAction
+from qgis.PyQt.QtWidgets import QAction
+from qgis.core import *
 from .CalculateGeometryDialog import CalculateGeometryDialog
 
 
@@ -38,11 +35,10 @@ class CalculateGeometry:
             self.qgis_version = Qgis.QGIS_VERSION_INT
         except NameError:
             self.qgis_version = QGis.QGIS_VERSION_INT
-        self.Point, self.Line, self.Polygon = ((
-                QgsWkbTypes.PointGeometry,
-                QgsWkbTypes.LineGeometry,
-                QgsWkbTypes.PolygonGeometry) if self.qgis_version >= 29900
-                else (QGis.Point, QGis.Line, QGis.Polygon))
+        self.Point, self.Line, self.Polygon = (
+                [QgsWkbTypes.PointGeometry, QgsWkbTypes.LineGeometry, QgsWkbTypes.PolygonGeometry]
+                if self.qgis_version >= 29900 else
+                [QGis.Point, QGis.Line, QGis.Polygon])
 
         if QSettings().value('locale/overrideFlag', type=bool):
             locale = QSettings().value('locale/userLocale')
@@ -60,10 +56,7 @@ class CalculateGeometry:
         return QCoreApplication.translate(self.__class__.__name__, message)
 
     def initGui(self):
-        self.dialog = CalculateGeometryDialog()
-        self.dialog.comboBox_property.currentIndexChanged.connect(self.property_changed)
-
-        self.action = QAction(self.tr('&Calculate Geometry...'), self.iface.mainWindow())
+        self.action = QAction(self.tr('Calculate Geometry...'), self.iface.mainWindow())
         self.action.triggered.connect(self.run)
 
         if self.qgis_version >= 29900:
@@ -121,29 +114,39 @@ class CalculateGeometry:
         if layer.__class__.__name__ == 'QgsVectorLayer':
             dp = layer.dataProvider()
             self.action.setEnabled(bool(dp.capabilities() & dp.ChangeAttributeValues)
-                                   and (not layer.readOnly())
-                                   and (layer.geometryType() != self.Point))
+                                   and (not layer.readOnly()))
 
     def run(self):
-        self.dialog.comboBox_property.clear()
-        self.dialog.comboBox_field.clear()
-        self.dialog.comboBox_units.clear()
-
         layer = self.iface.mapCanvas().currentLayer()
-        if layer.geometryType() == self.Line:
-            self.dialog.comboBox_property.addItems([self.tr('Length')])
-        elif layer.geometryType() == self.Polygon:
-            self.dialog.comboBox_property.addItems([self.tr('Area'), self.tr('Perimeter')])
-        else:
-            self.iface.messageBar().pushCritical(
-                    self.tr('Unsupported geometry type'), layer.name())
-            return
         if layer.fields().count() == 0:
             self.iface.messageBar().pushCritical(
                     self.tr('No fields in the layer'), layer.name())
             return
+        if layer.geometryType() not in [self.Point, self.Line, self.Polygon]:
+            self.iface.messageBar().pushCritical(
+                    self.tr('Unsupported geometry type'), layer.name())
+            return
+
+        self.dialog = CalculateGeometryDialog()
+
+        self.dialog.comboBox_property.currentIndexChanged.connect(self.property_changed)
+        if layer.geometryType() == self.Point:
+            self.dialog.comboBox_property.addItems([self.tr('X Coordinate'), self.tr('Y Coordinate')])
+        elif layer.geometryType() == self.Line:
+            self.dialog.comboBox_property.addItems([self.tr('Length')])
+        elif layer.geometryType() == self.Polygon:
+            self.dialog.comboBox_property.addItems([self.tr('Area'), self.tr('Perimeter')])
+        else:
+            raise ValueError('Geometry type "{}" is not supported'.format(property))
+
         self.dialog.comboBox_field.addItems(
                 [x.name() for x in layer.fields()])
+
+        self.dialog.crs_layer.setText('{} - {}'.format(layer.crs().authid(), layer.crs().description()))
+        self.dialog.crs_select.setCrs(layer.crs())
+        self.dialog.crs_select.layout().itemAt(0).widget().setCurrentIndex(1)
+        self.dialog.radio1.setChecked(True)
+
         self.dialog.show()
 
         result = self.dialog.exec_()
@@ -153,26 +156,40 @@ class CalculateGeometry:
             units = self.dialog.comboBox_units.currentText()
             da = QgsDistanceArea()
             if self.qgis_version >= 29900:
-                da.setSourceCrs(layer.crs(), QgsCoordinateTransformContext())
+                da.setSourceCrs(layer.crs(), QgsProject.instance().transformContext())
             else:
                 da.setSourceCrs(layer.crs())
 
             if layer.isEditable() == False:
                 layer.startEditing()
             for f in layer.getFeatures():
-                if property == self.tr('Area'):
-                    res = da.measureArea(f.geometry())
+                g = f.geometry()
+                if self.dialog.radio2.isChecked():
+                    if self.qgis_version >= 29900:
+                        ct = QgsCoordinateTransform(layer.crs(), self.dialog.crs_select.crs(), QgsProject.instance())
+                    else:
+                        ct = QgsCoordinateTransform(layer.crs(), self.dialog.crs_select.crs())
+                    g = QgsGeometry(g)
+                    g.transform(ct)
+                if property == self.tr('X Coordinate'):
+                    res = g.vertexAt(0).x()
+                elif property == self.tr('Y Coordinate'):
+                    res = g.vertexAt(0).y()
+                elif property == self.tr('Length'):
+                    res = da.measureLength(g)
+                    res = da.convertLengthMeasurement(res, self.DistanceUnits.index(units))
+                elif property == self.tr('Area'):
+                    res = da.measureArea(g)
                     res = da.convertAreaMeasurement(res, self.AreaUnits.index(units))
                 elif property == self.tr('Perimeter'):
-                    res = da.measurePerimeter(f.geometry())
-                    res = da.convertLengthMeasurement(res, self.DistanceUnits.index(units))
-                elif property == self.tr('Length'):
-                    res = da.measureLength(f.geometry())
+                    res = da.measurePerimeter(g)
                     res = da.convertLengthMeasurement(res, self.DistanceUnits.index(units))
                 else:
-                    raise ValueError('"{}" property is not supported'.format(property))
+                    raise ValueError('Property "{}" is not supported'.format(property))
                 f[field] = res
                 layer.updateFeature(f)
+
+        self.dialog.deleteLater()
 
     def property_changed(self):
         if self.dialog.comboBox_property.currentIndex() == -1:
@@ -207,5 +224,5 @@ class CalculateGeometry:
                     self.dialog.comboBox_units.removeItem(i)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     pass

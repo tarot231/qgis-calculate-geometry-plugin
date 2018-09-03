@@ -21,10 +21,9 @@
  ***************************************************************************/
 """
 
-try:
-    from qgis.PyQt.QtWidgets import *
-except:
-    from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtGui import QFontMetrics
+from qgis.gui import QgsProjectionSelectionWidget
 
 
 class CalculateGeometryDialog(QDialog):
@@ -35,10 +34,34 @@ class CalculateGeometryDialog(QDialog):
         self.comboBox_field = QComboBox()
         self.comboBox_units = QComboBox()
 
+        self.radio1 = QRadioButton(
+                self.tr('Use coordinate reference system of the layer'))
+        self.crs_layer = QLabel()
+        self.crs_layer.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+        h = QFontMetrics(self.crs_layer.font()).height()
+        self.crs_layer.setMinimumHeight(h + 6)
+
+        self.radio2 = QRadioButton(
+                self.tr('Use the following coordinate reference system'))
+        self.crs_select = QgsProjectionSelectionWidget()
+        self.crs_select.setOptionVisible(
+                QgsProjectionSelectionWidget.ProjectCrs, True)
+
+        grid = QGridLayout()
+        grid.addWidget(self.radio1, 0, 0, 1, 2)
+        grid.addWidget(self.crs_layer, 1, 1)
+        grid.addWidget(self.radio2, 2, 0, 1, 2)
+        grid.addWidget(self.crs_select, 3, 1)
+        grid.setColumnMinimumWidth(0, int(h * 1.5))
+        grid.setColumnMinimumWidth(1, h * 30 + 6)
+        groupBox_crs = QGroupBox(self.tr('Coordinate Reference System'))
+        groupBox_crs.setLayout(grid)
+
         form = QFormLayout()
-        form.addRow(self.tr('&Property:'), self.comboBox_property)
-        form.addRow(self.tr('&Field:'), self.comboBox_field)
-        form.addRow(self.tr('&Units:'), self.comboBox_units)
+        form.addRow(self.tr('Property'), self.comboBox_property)
+        form.addRow(groupBox_crs)
+        form.addRow(self.tr('Field'), self.comboBox_field)
+        form.addRow(self.tr('Units'), self.comboBox_units)
 
         buttonBox = QDialogButtonBox(accepted=self.accept,
                                      rejected=self.reject)
@@ -55,11 +78,4 @@ class CalculateGeometryDialog(QDialog):
 
 
 if __name__ == '__main__':
-    import sys
-    app = QApplication(sys.argv)
-    dialog = CalculateGeometryDialog()
-    dialog.comboBox_property.addItems(['Length'])
-    dialog.comboBox_field.addItems(['length'])
-    dialog.comboBox_units.addItems(['Meters'])
-    dialog.show()
-    sys.exit(app.exec_())
+    pass
