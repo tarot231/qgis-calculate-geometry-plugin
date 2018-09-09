@@ -4,10 +4,15 @@ qgisMinimumVersion=2.14
 qgisMaximumVersion=3.98
 description=Calculate area, length, in arbitrary units, without typing expressions
 about=This plugin calculates the area of the polygon and the length of the line, in arbitrary units. Compared to using field calculator, you don't need to type calculation expressions, so you can get results with fewer steps. Even if OTF is enabled, it doesn't affect the calculation result (see bug report #14675).
-version=0.4
+version=0.5
+changelog=0.5
+    * Hide action if multiple layers are selected
+    * Repaint the attribute table immediately after calculation
+    * If there are selected features, calculate them only
+    * If specific field name exists, select it in advance
 author=Tarot Osuji
 email=tarot@sdf.lonestar.org
 tags=calculator, geometry
-homepage=https://plugins.qgis.org/plugins/CalculateGeometry
+homepage=https://github.com/tarot231/CalculateGeometry
 repository=https://github.com/tarot231/CalculateGeometry
 tracker=https://github.com/tarot231/CalculateGeometry/issues

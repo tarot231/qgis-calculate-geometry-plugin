@@ -22,8 +22,8 @@
 """
 
 import os
-from qgis.PyQt.QtCore import QSettings, QLocale, QTranslator, QCoreApplication
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtCore import QSettings, QLocale, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtWidgets import QAction, QTableView
 from qgis.core import *
 from .CalculateGeometryDialog import CalculateGeometryDialog
 
@@ -101,23 +101,29 @@ class CalculateGeometry:
                                        self.tr('Miles')]
         self.AreaUnits += [None]
 
-        self.iface.mapCanvas().currentLayerChanged.connect(self.current_layer_changed)
+        self.iface.layerTreeView().clicked.connect(self.layer_tview_clicked)
 
     def unload(self):
-        self.iface.mapCanvas().currentLayerChanged.disconnect(self.current_layer_changed)
+        self.iface.layerTreeView().clicked.disconnect(self.layer_tview_clicked)
         if self.qgis_version >= 29900:
             self.iface.removeCustomActionForLayerType(self.action)
         else:
             self.iface.legendInterface().removeLegendLayerAction(self.action)
 
-    def current_layer_changed(self, layer):
-        if layer.__class__.__name__ == 'QgsVectorLayer':
-            dp = layer.dataProvider()
-            self.action.setEnabled(bool(dp.capabilities() & dp.ChangeAttributeValues)
-                                   and (not layer.readOnly()))
+    def layer_tview_clicked(self):
+        layers = self.iface.layerTreeView().selectedLayers()
+        if len(layers) == 1:
+            self.action.setVisible(True)
+            layer = layers[0]
+            if layer.__class__.__name__ == 'QgsVectorLayer':
+                dp = layer.dataProvider()
+                self.action.setEnabled(bool(dp.capabilities() & dp.ChangeAttributeValues)
+                                       and (not layer.readOnly()))
+        else:
+            self.action.setVisible(False)
 
     def run(self):
-        layer = self.iface.mapCanvas().currentLayer()
+        layer = self.iface.layerTreeView().currentLayer()
         if layer.fields().count() == 0:
             self.iface.messageBar().pushCritical(
                     self.tr('No fields in the layer'), layer.name())
@@ -129,6 +135,8 @@ class CalculateGeometry:
 
         self.dialog = CalculateGeometryDialog()
 
+        self.dialog.comboBox_field.addItems([x.name() for x in layer.fields()])
+
         self.dialog.comboBox_property.currentIndexChanged.connect(self.property_changed)
         if layer.geometryType() == self.Point:
             self.dialog.comboBox_property.addItems([self.tr('X Coordinate'), self.tr('Y Coordinate')])
@@ -137,10 +145,7 @@ class CalculateGeometry:
         elif layer.geometryType() == self.Polygon:
             self.dialog.comboBox_property.addItems([self.tr('Area'), self.tr('Perimeter')])
         else:
-            raise ValueError('Geometry type "{}" is not supported'.format(property))
-
-        self.dialog.comboBox_field.addItems(
-                [x.name() for x in layer.fields()])
+            raise ValueError('Geometry type ({}) is not supported'.format(layer.geometryType()))
 
         self.dialog.crs_layer.setText('{} - {}'.format(layer.crs().authid(), layer.crs().description()))
         self.dialog.crs_select.setCrs(layer.crs())
@@ -162,7 +167,10 @@ class CalculateGeometry:
 
             if layer.isEditable() == False:
                 layer.startEditing()
-            for f in layer.getFeatures():
+            features = (layer.selectedFeatures()
+                        if layer.selectedFeatures() else
+                        layer.getFeatures())
+            for f in features:
                 g = f.geometry()
                 if self.dialog.radio2.isChecked():
                     if self.qgis_version >= 29900:
@@ -173,8 +181,10 @@ class CalculateGeometry:
                     g.transform(ct)
                 if property == self.tr('X Coordinate'):
                     res = g.vertexAt(0).x()
+                    res = da.convertLengthMeasurement(res, self.DistanceUnits.index(units))
                 elif property == self.tr('Y Coordinate'):
                     res = g.vertexAt(0).y()
+                    res = da.convertLengthMeasurement(res, self.DistanceUnits.index(units))
                 elif property == self.tr('Length'):
                     res = da.measureLength(g)
                     res = da.convertLengthMeasurement(res, self.DistanceUnits.index(units))
@@ -186,32 +196,53 @@ class CalculateGeometry:
                     res = da.convertLengthMeasurement(res, self.DistanceUnits.index(units))
                 else:
                     raise ValueError('Property "{}" is not supported'.format(property))
-                f[field] = res
-                layer.updateFeature(f)
+                layer.changeAttributeValue(f.id(), f.fieldNameIndex(field), res)
+
+            attr_tables = [w for w in QgsApplication.instance().allWidgets()
+                       if 'QgsAttributeTableDialog' in w.objectName()]
+            for d in attr_tables:
+                d.findChild(QTableView, 'mTableView').viewport().update()
 
         self.dialog.deleteLater()
 
     def property_changed(self):
         if self.dialog.comboBox_property.currentIndex() == -1:
             return
-        if self.dialog.comboBox_units.currentIndex() != -1:
-            if self.iface.mapCanvas().currentLayer().geometryType() != self.Polygon:
-                return
 
+        property = self.dialog.comboBox_property.currentText()
+        l = [
+            (self.tr('X Coordinate'), 'xcoord'),
+            (self.tr('X Coordinate'), 'x'),
+            (self.tr('Y Coordinate'), 'ycoord'),
+            (self.tr('Y Coordinate'), 'y'),
+            (self.tr('Length'), 'length'),
+            (self.tr('Area'), 'area'),
+            (self.tr('Perimeter'), 'perimeter'),
+        ]
+        idx = -1
+        for property_name, field_name in l:
+            if property == property_name and idx == -1:
+                idx = self.dialog.comboBox_field.findText(field_name, Qt.MatchFixedString)
+        if idx != -1:
+            self.dialog.comboBox_field.setCurrentIndex(idx)
+
+        if self.dialog.comboBox_units.currentIndex() != -1:
+            if self.iface.layerTreeView().currentLayer().geometryType() != self.Polygon:
+                return
         self.dialog.comboBox_units.clear()
         proj = QgsProject.instance()
-        if self.dialog.comboBox_property.currentText() == self.tr('Area'):
+        if property == self.tr('Area'):
             self.dialog.comboBox_units.addItems(self.AreaUnits[:-1])
             idx = proj.areaUnits()
             if self.AreaUnits[idx] is None:
                 if self.qgis_version >= 29900:
                     idx = (QgsUnitTypes.AreaSquareDegrees
-                           if self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceDegrees
-                           else QgsUnitTypes.AreaSquareMeters)
+                           if self.iface.mapCanvas().mapUnits() == QgsUnitTypes.DistanceDegrees else
+                           QgsUnitTypes.AreaSquareMeters)
                 else:
                     idx = (QgsUnitTypes.SquareDegrees
-                           if self.iface.mapCanvas().mapUnits() == QGis.Degrees
-                           else QgsUnitTypes.SquareMeters)
+                           if self.iface.mapCanvas().mapUnits() == QGis.Degrees else
+                           QgsUnitTypes.SquareMeters)
             self.dialog.comboBox_units.setCurrentIndex(idx)
         else:
             self.dialog.comboBox_units.addItems(self.DistanceUnits)

@@ -38,8 +38,8 @@ class CalculateGeometryDialog(QDialog):
                 self.tr('Use coordinate reference system of the layer'))
         self.crs_layer = QLabel()
         self.crs_layer.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-        h = QFontMetrics(self.crs_layer.font()).height()
-        self.crs_layer.setMinimumHeight(h + 6)
+        font_height = QFontMetrics(self.crs_layer.font()).height()
+        self.crs_layer.setMinimumHeight(font_height + 6)
 
         self.radio2 = QRadioButton(
                 self.tr('Use the following coordinate reference system'))
@@ -52,8 +52,8 @@ class CalculateGeometryDialog(QDialog):
         grid.addWidget(self.crs_layer, 1, 1)
         grid.addWidget(self.radio2, 2, 0, 1, 2)
         grid.addWidget(self.crs_select, 3, 1)
-        grid.setColumnMinimumWidth(0, int(h * 1.5))
-        grid.setColumnMinimumWidth(1, h * 30 + 6)
+        grid.setColumnMinimumWidth(0, int(font_height * 1.5))
+        grid.setColumnMinimumWidth(1, font_height * 30 + 6)
         groupBox_crs = QGroupBox(self.tr('Coordinate Reference System'))
         groupBox_crs.setLayout(grid)
 
