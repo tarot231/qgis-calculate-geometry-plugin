@@ -7,7 +7,7 @@
                              -------------------
         begin                : 2018-02-06
         copyright            : (C) 2018 by Tarot Osuji
-        email                : tarot@sdf.lonestar.org
+        email                : tarot@sdf.org
         git sha              : $Format:%H$
  ***************************************************************************/
 

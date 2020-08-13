@@ -7,7 +7,7 @@
                              -------------------
         begin                : 2018-02-06
         copyright            : (C) 2018 by Tarot Osuji
-        email                : tarot@sdf.lonestar.org
+        email                : tarot@sdf.org
         git sha              : $Format:%H$
  ***************************************************************************/
 
@@ -101,26 +101,23 @@ class CalculateGeometry:
                                        self.tr('Miles')]
         self.AreaUnits += [None]
 
-        self.iface.layerTreeView().clicked.connect(self.layer_tview_clicked)
+        self.iface.layerTreeView().currentLayerChanged.connect(self.current_layer_changed)
+
+    def current_layer_changed(self, layer):
+        if layer.__class__.__name__ == 'QgsVectorLayer':
+            self.action.setVisible(True)
+            dp = layer.dataProvider()
+            self.action.setEnabled(bool(dp.capabilities() & dp.ChangeAttributeValues)
+                                   and (not layer.readOnly()))
+        else:
+            self.action.setVisible(False)
 
     def unload(self):
-        self.iface.layerTreeView().clicked.disconnect(self.layer_tview_clicked)
+        self.iface.layerTreeView().currentLayerChanged.disconnect(self.current_layer_changed)
         if self.qgis_version >= 29900:
             self.iface.removeCustomActionForLayerType(self.action)
         else:
             self.iface.legendInterface().removeLegendLayerAction(self.action)
-
-    def layer_tview_clicked(self):
-        layers = self.iface.layerTreeView().selectedLayers()
-        if len(layers) == 1:
-            self.action.setVisible(True)
-            layer = layers[0]
-            if layer.__class__.__name__ == 'QgsVectorLayer':
-                dp = layer.dataProvider()
-                self.action.setEnabled(bool(dp.capabilities() & dp.ChangeAttributeValues)
-                                       and (not layer.readOnly()))
-        else:
-            self.action.setVisible(False)
 
     def run(self):
         layer = self.iface.layerTreeView().currentLayer()

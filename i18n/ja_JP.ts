@@ -108,37 +108,37 @@
         <translation>マイル</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="132"/>
+        <location filename="../CalculateGeometry.py" line="129"/>
         <source>Unsupported geometry type</source>
         <translation>サポートされていないジオメトリのタイプです</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="128"/>
+        <location filename="../CalculateGeometry.py" line="125"/>
         <source>No fields in the layer</source>
         <translation>レイヤにフィールドがありません</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="215"/>
+        <location filename="../CalculateGeometry.py" line="212"/>
         <source>X Coordinate</source>
         <translation>X 座標</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="217"/>
+        <location filename="../CalculateGeometry.py" line="214"/>
         <source>Y Coordinate</source>
         <translation>Y 座標</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="218"/>
+        <location filename="../CalculateGeometry.py" line="215"/>
         <source>Length</source>
         <translation>長さ</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="220"/>
+        <location filename="../CalculateGeometry.py" line="217"/>
         <source>Perimeter</source>
         <translation>周長</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="234"/>
+        <location filename="../CalculateGeometry.py" line="231"/>
         <source>Area</source>
         <translation>面積</translation>
     </message>
