@@ -3,182 +3,117 @@
 <context>
     <name>CalculateGeometry</name>
     <message>
-        <location filename="../CalculateGeometry.py" line="59"/>
-        <source>Calculate Geometry...</source>
-        <translation>ジオメトリ演算...</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="71"/>
-        <source>Square Meters</source>
-        <translation>平方メートル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="72"/>
-        <source>Square Kilometers</source>
-        <translation>平方キロメートル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="73"/>
-        <source>Square Feet</source>
-        <translation>平方フィート</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="74"/>
-        <source>Square Yards</source>
-        <translation>平方ヤード</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="75"/>
-        <source>Square Miles</source>
-        <translation>平方マイル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="76"/>
-        <source>Hectares</source>
-        <translation>ヘクタール</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="77"/>
-        <source>Acres</source>
-        <translation>エーカー</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="78"/>
-        <source>Square Nautical Miles</source>
-        <translation>平方海里</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="79"/>
-        <source>Square Degrees</source>
-        <translation>平方度</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="81"/>
-        <source>Square Centimeters</source>
-        <translation>平方センチメートル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="82"/>
-        <source>Square Millimeters</source>
-        <translation>平方ミリメートル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="90"/>
-        <source>Centimeters</source>
-        <translation>センチメートル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="91"/>
-        <source>Millimeters</source>
-        <translation>ミリメートル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="94"/>
-        <source>Meters</source>
-        <translation>メートル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="95"/>
-        <source>Feet</source>
-        <translation>フィート</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="96"/>
-        <source>Degrees</source>
-        <translation>度</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="97"/>
-        <source>Nautical Miles</source>
-        <translation>海里</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="99"/>
-        <source>Kilometers</source>
-        <translation>キロメートル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="100"/>
-        <source>Yards</source>
-        <translation>ヤード</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="101"/>
-        <source>Miles</source>
-        <translation>マイル</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="129"/>
+        <location filename="../CalculateGeometry.py" line="83"/>
         <source>Unsupported geometry type</source>
         <translation>サポートされていないジオメトリのタイプです</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="125"/>
-        <source>No fields in the layer</source>
-        <translation>レイヤにフィールドがありません</translation>
+        <location filename="../CalculateGeometry.py" line="47"/>
+        <source>Calculate Geometry…</source>
+        <translation>ジオメトリ演算…</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="212"/>
-        <source>X Coordinate</source>
-        <translation>X 座標</translation>
+        <location filename="../CalculateGeometry.py" line="89"/>
+        <source>invalid projection</source>
+        <translation>不正な座標参照系です</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="214"/>
-        <source>Y Coordinate</source>
-        <translation>Y 座標</translation>
+        <location filename="../CalculateGeometry.py" line="99"/>
+        <source>Custom</source>
+        <translation>カスタム</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="215"/>
-        <source>Length</source>
-        <translation>長さ</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="217"/>
-        <source>Perimeter</source>
-        <translation>周長</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometry.py" line="231"/>
-        <source>Area</source>
-        <translation>面積</translation>
+        <location filename="../CalculateGeometry.py" line="101"/>
+        <source>None / Planimetric</source>
+        <translation>None / Planimetric</translation>
     </message>
 </context>
 <context>
     <name>CalculateGeometryDialog</name>
     <message>
-        <location filename="../CalculateGeometryDialog.py" line="37"/>
-        <source>Use coordinate reference system of the layer</source>
-        <translation>レイヤの座標参照系を使用する</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometryDialog.py" line="44"/>
-        <source>Use the following coordinate reference system</source>
-        <translation>次の座標参照系を使用する</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometryDialog.py" line="57"/>
-        <source>Coordinate Reference System</source>
-        <translation>座標参照系</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometryDialog.py" line="61"/>
-        <source>Property</source>
-        <translation>プロパティ</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometryDialog.py" line="63"/>
+        <location filename="../CalculateGeometryUI.py" line="111"/>
         <source>Field</source>
         <translation>フィールド</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryDialog.py" line="64"/>
+        <location filename="../CalculateGeometryUI.py" line="112"/>
         <source>Units</source>
         <translation>単位</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryDialog.py" line="75"/>
+        <location filename="../CalculateGeometryUI.py" line="181"/>
         <source>Calculate Geometry</source>
         <translation>ジオメトリ演算</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="82"/>
+        <source>X Coordinate</source>
+        <translation>X 座標</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="83"/>
+        <source>Y Coordinate</source>
+        <translation>Y 座標</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="84"/>
+        <source>Z Coordinate</source>
+        <translation>Z 座標</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="85"/>
+        <source>M Value</source>
+        <translation>M 値</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="95"/>
+        <source>Length</source>
+        <translation>長さ</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="103"/>
+        <source>Map Units</source>
+        <translation>地図単位</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="100"/>
+        <source>Area</source>
+        <translation>面積</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="105"/>
+        <source>Perimeter</source>
+        <translation>周長</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="127"/>
+        <source>Properties</source>
+        <translation>プロパティ</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="130"/>
+        <source>Cartesian calculation with following CRS</source>
+        <translation>デカルト計算で次の座標参照系を用いる</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="133"/>
+        <source>Ellipsoidal calculation with following ellipsoid</source>
+        <translation>楕円体計算で次の回転楕円体を用いる</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="157"/>
+        <source>Calculation System</source>
+        <translation>計算方式</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="160"/>
+        <source>Selected features only</source>
+        <translation>選択された地物のみ</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="161"/>
+        <source>Create virtual field</source>
+        <translation>仮想フィールド作成</translation>
     </message>
 </context>
 </TS>
