@@ -44,7 +44,7 @@ class CalculateGeometry(QObject):
             qApp.installTranslator(self.translator)
 
     def initGui(self):
-        self.action = QAction(self.tr('Calculate Geometry…'))
+        self.action = QAction(self.tr('Calculate Geometry') + '…')
         self.action.triggered.connect(self.run)
         self.iface.addCustomActionForLayerType(self.action, None,
                 QgsMapLayer.VectorLayer, True)
@@ -56,6 +56,7 @@ class CalculateGeometry(QObject):
     def run(self):
         if self.dialog is None:
             self.dialog = CalculateGeometryDialog()
+            self.dialog.checks.buttonToggled.connect(self.checks_toggled)
             self.dialog.radios.buttonClicked.connect(self.system_changed)
             self.dialog.selectorCrs.crsChanged.connect(self.system_changed)
 
@@ -68,15 +69,23 @@ class CalculateGeometry(QObject):
         elif layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             self.dialog.prepare_for_polygon()
         else:
-            self.iface.messageBar().pushCritical(
-                    self.tr('Unsupported geometry type'), layer.name())
+            self.iface.messageBar().pushCritical(self.tr('Calculate Geometry'),
+                    self.tr('Unsupported geometry type'))
             return
         if layer.crs().isValid():
             self.dialog.selectorCrs.setLayerCrs(layer.crs())
         else:
-            self.iface.messageBar().pushCritical(
-                    self.tr('invalid projection'), layer.name())
+            self.iface.messageBar().pushCritical(self.tr('Calculate Geometry'),
+                    self.tr('Invalid CRS'))
             return
+
+        fields = [x.name() for x in layer.fields()]
+        for combo in (cols[1] for cols in self.dialog.rows):
+            text = combo.currentText()
+            combo.clear()
+            combo.addItems(fields)
+            combo.setCompleter(QCompleter(fields))
+            combo.setEditText(text)
 
         ellips_defs = {d.acronym: d for d in QgsEllipsoidUtils.definitions()}
         ellips_acro = QgsProject.instance().ellipsoid()
@@ -94,16 +103,16 @@ class CalculateGeometry(QObject):
         if not self.dialog.radio2.isEnabled():
             self.dialog.radio1.setChecked(True)
 
+        self.is_selected = bool(layer.selectedFeatureCount())
+        self.dialog.checkVirtual.setEnabled(True)
+        self.dialog.checkSelected.setEnabled(self.is_selected)
+        self.dialog.checkSelected.setChecked(self.is_selected)
+
         dp = layer.dataProvider()
         if not dp.capabilities() & dp.ChangeAttributeValues \
                 or layer.readOnly():
-            self.dialog.checkSelected.setEnabled(False)
-            self.dialog.checkSelected.setChecked(False)
             self.dialog.checkVirtual.setEnabled(False)
             self.dialog.checkVirtual.setChecked(True)
-        elif not self.dialog.checkSelected.isEnabled() \
-                and not self.dialog.checkVirtual.isEnabled():
-            self.dialog.checkVirtual.setEnabled(True)
 
         self.dialog.reset_standard_buttons()
         self.dialog.setMinimumHeight(0)
@@ -136,6 +145,7 @@ class CalculateGeometry(QObject):
                               "'%s'" % self.dialog.selectorCrs.crs().authid() )
                 if conv_factor != 1:
                     expstr += ' * %s' % str(conv_factor)
+
             idx = layer.fields().indexOf(field_name)
             if idx == -1:
                 if virtual:
@@ -146,12 +156,14 @@ class CalculateGeometry(QObject):
                     layer.startEditing()
                     layer.addAttribute(QgsField(field_name, QVariant.Double))
                     idx = layer.fields().indexOf(field_name)
-            elif layer.fields().fieldOrigin(idx) == QgsFields.OriginExpression:
+
+            if layer.fields().fieldOrigin(idx) == QgsFields.OriginExpression:
                 layer.updateExpressionField(idx, expstr)
                 return
-            if layer.fields().fieldOrigin(idx) in (
-                    QgsFields.OriginProvider, QgsFields.OriginEdit):
-                layer.startEditing()
+
+            if (layer.fields().fieldOrigin(idx)
+                    in (QgsFields.OriginProvider, QgsFields.OriginEdit)
+                    and layer.startEditing()):
                 context = QgsExpressionContext(
                         QgsExpressionContextUtils.globalProjectLayerScopes(layer))
                 features = (layer.selectedFeatures()
@@ -161,45 +173,59 @@ class CalculateGeometry(QObject):
                     context.setFeature(f)
                     layer.changeAttributeValue(f.id(), idx,
                             QgsExpression(expstr).evaluate(context))
+                return
+
+            self.iface.messageBar().pushWarning(self.tr('Calculate Geometry'),
+                    self.tr('Actual field "{}" could not be processed')
+                            .format(field_name))
         ########################################
 
         if layer.geometryType() == QgsWkbTypes.PointGeometry:
             row = self.dialog.rowXcoord
-            if row[0].isChecked() and row[1].text():
-                process_exp('x', row[1].text())
+            if row[0].isChecked() and row[1].currentText():
+                process_exp('x', row[1].currentText())
             row = self.dialog.rowYcoord
-            if row[0].isChecked() and row[1].text():
-                process_exp('y', row[1].text())
+            if row[0].isChecked() and row[1].currentText():
+                process_exp('y', row[1].currentText())
             if QgsWkbTypes.hasZ(layer.wkbType()):
                 row = self.dialog.rowZcoord
-                if row[0].isChecked() and row[1].text():
-                    process_exp('z', row[1].text())
+                if row[0].isChecked() and row[1].currentText():
+                    process_exp('z', row[1].currentText())
             if QgsWkbTypes.hasM(layer.wkbType()):
                 row = self.dialog.rowMvalue
-                if row[0].isChecked() and row[1].text():
-                    process_exp('m', row[1].text())
+                if row[0].isChecked() and row[1].currentText():
+                    process_exp('m', row[1].currentText())
         else:
             du = layer.sourceCrs().mapUnits()
             if layer.geometryType() == QgsWkbTypes.LineGeometry:
                 row = self.dialog.rowLength
-                if row[0].isChecked() and row[1].text():
+                if row[0].isChecked() and row[1].currentText():
                     conv_factor = QgsUnitTypes.fromUnitToUnitFactor(
                             du, row[2].currentData())
-                    process_exp('length', row[1].text(), conv_factor)
+                    process_exp('length', row[1].currentText(), conv_factor)
             elif layer.geometryType() == QgsWkbTypes.PolygonGeometry:
                 row = self.dialog.rowArea
-                if row[0].isChecked() and row[1].text():
+                if row[0].isChecked() and row[1].currentText():
                     au = QgsUnitTypes.distanceToAreaUnit(du)
                     conv_factor = QgsUnitTypes.fromUnitToUnitFactor(
                             au, row[2].currentData())
-                    process_exp('area', row[1].text(), conv_factor)
+                    process_exp('area', row[1].currentText(), conv_factor)
                 row = self.dialog.rowPerimeter
-                if row[0].isChecked() and row[1].text():
+                if row[0].isChecked() and row[1].currentText():
                     conv_factor = QgsUnitTypes.fromUnitToUnitFactor(
                             du, row[2].currentData())
-                    process_exp('perimeter', row[1].text(), conv_factor)
+                    process_exp('perimeter', row[1].currentText(), conv_factor)
 
         self.iface.actionDraw().trigger()
+
+    def checks_toggled(self, button, checked):
+        for b in self.dialog.checks.buttons():
+            if not b is button:
+                if checked:
+                    b.setEnabled(False)
+                    b.setChecked(False)
+                elif self.is_selected:
+                    b.setEnabled(True)
 
     def system_changed(self):
         if self.dialog.rowXcoord[2].isVisible():

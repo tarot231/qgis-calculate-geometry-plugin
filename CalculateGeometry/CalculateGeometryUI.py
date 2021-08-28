@@ -60,24 +60,18 @@ class FramedLabel(QLabel):
         self.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
 
-class ExclusiveGroup(QButtonGroup):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
-
-        self.setExclusive(False)
-        self.buttonClicked.connect(self.clicked)
-
-    def clicked(self, button):
-        for b in self.buttons():
-            if not b is button:
-                b.setEnabled(not button.isChecked())
-
-
 class CalculateGeometryDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
 
-        cols = lambda cx, lx: (QCheckBox(cx), QLineEdit(lx), FramedLabel())
+        def create_editable_combobox(text):
+            combo = QComboBox()
+            combo.setEditable(True)
+            combo.setEditText(text)
+            return combo
+
+        cols = lambda cx, lx: \
+                (QCheckBox(cx), create_editable_combobox(lx), FramedLabel())
 
         self.rowXcoord = cols(self.tr('X Coordinate'), 'xcoord')
         self.rowYcoord = cols(self.tr('Y Coordinate'), 'ycoord')
@@ -90,7 +84,8 @@ class CalculateGeometryDialog(QDialog):
         self.rowZcoord[2].setText(QgsUnitTypes.toString(unit).title())
         self.rowMvalue[2].setText(QgsUnitTypes.toString(unit).title())
 
-        cols = lambda cx, lx: (QCheckBox(cx), QLineEdit(lx), QComboBox())
+        cols = lambda cx, lx: \
+                (QCheckBox(cx), create_editable_combobox(lx), QComboBox())
 
         self.rowLength = cols(self.tr('Length'), 'length')
         for unit in distance_units:
@@ -158,8 +153,9 @@ class CalculateGeometryDialog(QDialog):
         groupSystem.setLayout(grid)
 
         self.checkSelected = QCheckBox(self.tr('Selected features only'))
-        self.checkVirtual = QCheckBox(self.tr('Create virtual field'))
-        self.checks = ExclusiveGroup()
+        self.checkVirtual = QCheckBox(self.tr('Use virtual field for new field'))
+        self.checks = QButtonGroup()
+        self.checks.setExclusive(False)
         self.checks.addButton(self.checkSelected)
         self.checks.addButton(self.checkVirtual)
 
