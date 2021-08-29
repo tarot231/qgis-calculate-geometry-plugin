@@ -7,10 +7,10 @@ about=This plugin calculates the area of the polygon and the length of the line,
 about[ja]=このプラグインは、ポリゴンの面積やラインの長さを任意の単位で計算します。フィールド計算機と比べて、計算式や単位換算係数を入力する必要がないため、少ない手順で結果を得ることができます。
 version=0.6.1
 changelog=
-0.6.1
+ 0.6.1
   - Use dropdown for field (#4)
   - Fixed checkbox exclusivity
-0.6
+ 0.6
   - Calculate multiple geometry properties at once
   - Support ellipsoidal calculation system
   - Support virtual layer (#3)
