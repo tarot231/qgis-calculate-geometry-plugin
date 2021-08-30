@@ -72,12 +72,12 @@ class CalculateGeometry(QObject):
             self.iface.messageBar().pushCritical(self.tr('Calculate Geometry'),
                     self.tr('Unsupported geometry type'))
             return
-        if layer.crs().isValid():
-            self.dialog.selectorCrs.setLayerCrs(layer.crs())
-        else:
+        if not layer.crs().isValid():
             self.iface.messageBar().pushCritical(self.tr('Calculate Geometry'),
                     self.tr('Invalid CRS'))
             return
+        self.dialog.selectorCrs.setLayerCrs(layer.crs())
+        self.system_changed()
 
         fields = [x.name() for x in layer.fields()]
         for combo in (cols[1] for cols in self.dialog.rows):
@@ -161,9 +161,9 @@ class CalculateGeometry(QObject):
                 layer.updateExpressionField(idx, expstr)
                 return
 
-            if (layer.fields().fieldOrigin(idx)
-                    in (QgsFields.OriginProvider, QgsFields.OriginEdit)
-                    and layer.startEditing()):
+            if layer.fields().fieldOrigin(idx) in (
+                    QgsFields.OriginProvider, QgsFields.OriginEdit):
+                layer.startEditing()
                 context = QgsExpressionContext(
                         QgsExpressionContextUtils.globalProjectLayerScopes(layer))
                 features = (layer.selectedFeatures()
@@ -171,9 +171,10 @@ class CalculateGeometry(QObject):
                             layer.getFeatures())
                 for f in features:
                     context.setFeature(f)
-                    layer.changeAttributeValue(f.id(), idx,
+                    res = layer.changeAttributeValue(f.id(), idx,
                             QgsExpression(expstr).evaluate(context))
-                return
+                if res:
+                    return
 
             self.iface.messageBar().pushWarning(self.tr('Calculate Geometry'),
                     self.tr('Actual field "{}" could not be processed')
@@ -228,7 +229,7 @@ class CalculateGeometry(QObject):
                     b.setEnabled(True)
 
     def system_changed(self):
-        if self.dialog.rowXcoord[2].isVisible():
+        if self.dialog.rowXcoord[2].isVisibleTo(self.dialog):
             unit = self.dialog.selectorCrs.crs().mapUnits()
             self.dialog.rowXcoord[2].setText(QgsUnitTypes.toString(unit).title())
             self.dialog.rowYcoord[2].setText(QgsUnitTypes.toString(unit).title())
