@@ -18,7 +18,7 @@
         <translation>None / Planimetric</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="179"/>
+        <location filename="../CalculateGeometry.py" line="181"/>
         <source>Calculate Geometry</source>
         <translation>ジオメトリ演算</translation>
     </message>
@@ -28,7 +28,7 @@
         <translation>不正な座標参照系です</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="179"/>
+        <location filename="../CalculateGeometry.py" line="181"/>
         <source>Actual field &quot;{}&quot; could not be processed</source>
         <translation>実フィールド &quot;{}&quot; は処理できませんでした</translation>
     </message>

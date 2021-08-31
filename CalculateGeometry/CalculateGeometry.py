@@ -140,8 +140,10 @@ class CalculateGeometry(QObject):
                 if transform == 0:
                     expstr += '($geometry)'
                 else:
-                    expstr += '(transform($geometry, @layer_crs, %s))' % (
-                              '@project_crs' if transform == -1 else
+                    expstr += "(transform($geometry, " \
+                                         "layer_property(@layer ,'crs'), " \
+                                         "%s))" % (
+                              "@project_crs" if transform == -1 else
                               "'%s'" % self.dialog.selectorCrs.crs().authid() )
                 if conv_factor != 1:
                     expstr += ' * %s' % str(conv_factor)
