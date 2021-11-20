@@ -22,7 +22,7 @@
 """
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import QFont, QFontMetrics
+from qgis.PyQt.QtGui import QFont, QFontMetrics, QIntValidator
 from qgis.PyQt.QtWidgets import *
 from qgis.core import QgsUnitTypes, QgsCoordinateReferenceSystem
 from qgis.gui import QgsProjectionSelectionWidget
@@ -60,6 +60,13 @@ class FramedLabel(QLabel):
         self.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
 
+class PrecisionEdit(QLineEdit):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.setValidator(QIntValidator(-99, 99))
+
+
 class CalculateGeometryDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -71,7 +78,8 @@ class CalculateGeometryDialog(QDialog):
             return combo
 
         cols = lambda cx, lx: \
-                (QCheckBox(cx), create_editable_combobox(lx), FramedLabel())
+                (QCheckBox(cx), create_editable_combobox(lx),
+                 FramedLabel(), PrecisionEdit())
 
         self.rowXcoord = cols(self.tr('X Coordinate'), 'xcoord')
         self.rowYcoord = cols(self.tr('Y Coordinate'), 'ycoord')
@@ -85,7 +93,8 @@ class CalculateGeometryDialog(QDialog):
         self.rowMvalue[2].setText(QgsUnitTypes.toString(unit).title())
 
         cols = lambda cx, lx: \
-                (QCheckBox(cx), create_editable_combobox(lx), QComboBox())
+                (QCheckBox(cx), create_editable_combobox(lx),
+                 QComboBox(), PrecisionEdit())
 
         self.rowLength = cols(self.tr('Length'), 'length')
         for unit in distance_units:
@@ -105,6 +114,11 @@ class CalculateGeometryDialog(QDialog):
         grid = QGridLayout()
         grid.addWidget(QLabel(self.tr('Field')), 0, 1)
         grid.addWidget(QLabel(self.tr('Units')), 0, 2)
+        grid.addWidget(QLabel(self.tr('Precision')), 0, 3)
+        grid.itemAtPosition(0, 3).widget().show()
+        width = grid.itemAtPosition(0, 3).geometry().width()
+        if width < QFontMetrics(QFont()).height() * 3:
+            width = QFontMetrics(QFont()).height() * 3
         self.rows = (self.rowXcoord,
                      self.rowYcoord,
                      self.rowZcoord,
@@ -114,9 +128,11 @@ class CalculateGeometryDialog(QDialog):
                      self.rowPerimeter,)
         for row, w in enumerate(self.rows):
             w[0].setChecked(True)
-            for col in range(3):
+            w[1].setMinimumWidth(QFontMetrics(QFont()).height() * 9)
+            w[3].setFixedWidth(width)
+            for col in range(len(w)):
                 grid.addWidget(w[col], row + 1, col)
-        for col in range(3):
+        for col in (1, 2):
             grid.setColumnStretch(col, 1)
 
         groupProp = QGroupBox(self.tr('Properties'))
@@ -183,10 +199,10 @@ class CalculateGeometryDialog(QDialog):
 
     def prepare_rows(self, rows):
         for row in self.rows:
-            for col in range(3):
+            for col in range(len(row)):
                 row[col].hide()
         for row in rows:
-            for col in range(3):
+            for col in range(len(row)):
                 row[col].show()
 
     def prepare_for_point(self, hasZ=True, hasM=True):
@@ -202,3 +218,10 @@ class CalculateGeometryDialog(QDialog):
 
     def prepare_for_polygon(self):
         self.prepare_rows([self.rowArea, self.rowPerimeter])
+
+
+if __name__ == '__main__':
+    app = QApplication([])
+    w = CalculateGeometryDialog()
+    w.show()
+    app.exec()

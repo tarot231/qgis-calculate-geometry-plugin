@@ -26,32 +26,29 @@ from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import QgsProjectionSelectionWidget
-from .CalculateGeometryUI import CalculateGeometryDialog, distance_units, area_units
+from .CalculateGeometryUI import (
+        CalculateGeometryDialog, distance_units, area_units)
 
 
 class CalculateGeometry(QObject):
     def __init__(self, iface):
         super().__init__()
         self.iface = iface
-
-        if QSettings().value('locale/overrideFlag', type=bool):
-            locale = QLocale(QSettings().value('locale/userLocale'))
-        else:
-            locale = QLocale.system()
         self.translator = QTranslator()
-        if self.translator.load(locale, '', '',
-                os.path.join(os.path.dirname(__file__), 'i18n')):
+        if self.translator.load(QLocale(QgsApplication.locale()),
+                '', '', os.path.join(os.path.dirname(__file__), 'i18n')):
             qApp.installTranslator(self.translator)
 
     def initGui(self):
-        self.action = QAction(self.tr('Calculate Geometry') + '…')
-        self.action.triggered.connect(self.run)
-        self.iface.addCustomActionForLayerType(self.action, None,
+        self.plugin_name = self.tr('Calculate Geometry')
+        self.plugin_act = QAction(self.plugin_name + '…')
+        self.plugin_act.triggered.connect(self.run)
+        self.iface.addCustomActionForLayerType(self.plugin_act, None,
                 QgsMapLayer.VectorLayer, True)
         self.dialog = None
 
     def unload(self):
-        self.iface.removeCustomActionForLayerType(self.action)
+        self.iface.removeCustomActionForLayerType(self.plugin_act)
 
     def run(self):
         if self.dialog is None:
@@ -69,11 +66,11 @@ class CalculateGeometry(QObject):
         elif layer.geometryType() == QgsWkbTypes.PolygonGeometry:
             self.dialog.prepare_for_polygon()
         else:
-            self.iface.messageBar().pushCritical(self.tr('Calculate Geometry'),
+            self.iface.messageBar().pushCritical(self.plugin_name,
                     self.tr('Unsupported geometry type'))
             return
         if not layer.crs().isValid():
-            self.iface.messageBar().pushCritical(self.tr('Calculate Geometry'),
+            self.iface.messageBar().pushCritical(self.plugin_name,
                     self.tr('Invalid CRS'))
             return
         self.dialog.selectorCrs.setLayerCrs(layer.crs())
@@ -93,7 +90,7 @@ class CalculateGeometry(QObject):
             ellips_desc = ellips_defs[ellips_acro].description
         except KeyError:
             if ellips_acro.startswith('PARAMETER:'):
-                ellips_desc = self.tr('Custom') + ' (%s)' % ellips_acro
+                ellips_desc = self.tr('Custom ({})').format(ellips_acro)
             else:
                 ellips_desc = self.tr('None / Planimetric')
         self.dialog.labelEllips.setText(ellips_desc)
@@ -133,7 +130,7 @@ class CalculateGeometry(QObject):
         virtual = self.dialog.checkVirtual.isChecked()
 
         ########################################
-        def process_exp(expstr, field_name, conv_factor=1):
+        def process_exp(expstr, field_name, prec, conv_factor=1):
             if self.dialog.radio2.isChecked():
                 expstr = '$' + expstr
             else:
@@ -147,6 +144,8 @@ class CalculateGeometry(QObject):
                               "'%s'" % self.dialog.selectorCrs.crs().authid() )
                 if conv_factor != 1:
                     expstr += ' * %s' % str(conv_factor)
+            if prec is not None:
+                expstr = 'round(%s, %d)' % (expstr, prec)
 
             idx = layer.fields().indexOf(field_name)
             if idx == -1:
@@ -178,26 +177,36 @@ class CalculateGeometry(QObject):
                 if res:
                     return
 
-            self.iface.messageBar().pushWarning(self.tr('Calculate Geometry'),
+            self.iface.messageBar().pushWarning(self.plugin_name,
                     self.tr('Actual field "{}" could not be processed')
                             .format(field_name))
         ########################################
 
+        def get_prec(lineedit):
+            text = lineedit.text()
+            try:
+                prec = int(text)
+                lineedit.setText(str(prec))
+            except ValueError:
+                lineedit.clear()
+                prec = None
+            return prec
+
         if layer.geometryType() == QgsWkbTypes.PointGeometry:
             row = self.dialog.rowXcoord
             if row[0].isChecked() and row[1].currentText():
-                process_exp('x', row[1].currentText())
+                process_exp('x', row[1].currentText(), get_prec(row[3]))
             row = self.dialog.rowYcoord
             if row[0].isChecked() and row[1].currentText():
-                process_exp('y', row[1].currentText())
+                process_exp('y', row[1].currentText(), get_prec(row[3]))
             if QgsWkbTypes.hasZ(layer.wkbType()):
                 row = self.dialog.rowZcoord
                 if row[0].isChecked() and row[1].currentText():
-                    process_exp('z', row[1].currentText())
+                    process_exp('z', row[1].currentText(), get_prec(row[3]))
             if QgsWkbTypes.hasM(layer.wkbType()):
                 row = self.dialog.rowMvalue
                 if row[0].isChecked() and row[1].currentText():
-                    process_exp('m', row[1].currentText())
+                    process_exp('m', row[1].currentText(), get_prec(row[3]))
         else:
             du = layer.sourceCrs().mapUnits()
             if layer.geometryType() == QgsWkbTypes.LineGeometry:
@@ -205,19 +214,22 @@ class CalculateGeometry(QObject):
                 if row[0].isChecked() and row[1].currentText():
                     conv_factor = QgsUnitTypes.fromUnitToUnitFactor(
                             du, row[2].currentData())
-                    process_exp('length', row[1].currentText(), conv_factor)
+                    process_exp('length', row[1].currentText(),
+                            get_prec(row[3]), conv_factor)
             elif layer.geometryType() == QgsWkbTypes.PolygonGeometry:
                 row = self.dialog.rowArea
                 if row[0].isChecked() and row[1].currentText():
                     au = QgsUnitTypes.distanceToAreaUnit(du)
                     conv_factor = QgsUnitTypes.fromUnitToUnitFactor(
                             au, row[2].currentData())
-                    process_exp('area', row[1].currentText(), conv_factor)
+                    process_exp('area', row[1].currentText(),
+                            get_prec(row[3]), conv_factor)
                 row = self.dialog.rowPerimeter
                 if row[0].isChecked() and row[1].currentText():
                     conv_factor = QgsUnitTypes.fromUnitToUnitFactor(
                             du, row[2].currentData())
-                    process_exp('perimeter', row[1].currentText(), conv_factor)
+                    process_exp('perimeter', row[1].currentText(),
+                            get_prec(row[3]), conv_factor)
 
         self.iface.actionDraw().trigger()
 
@@ -233,8 +245,10 @@ class CalculateGeometry(QObject):
     def system_changed(self):
         if self.dialog.rowXcoord[2].isVisibleTo(self.dialog):
             unit = self.dialog.selectorCrs.crs().mapUnits()
-            self.dialog.rowXcoord[2].setText(QgsUnitTypes.toString(unit).title())
-            self.dialog.rowYcoord[2].setText(QgsUnitTypes.toString(unit).title())
+            self.dialog.rowXcoord[2].setText(
+                    QgsUnitTypes.toString(unit).title())
+            self.dialog.rowYcoord[2].setText(
+                    QgsUnitTypes.toString(unit).title())
         else:
             if self.dialog.radio2.isChecked():
                 project = QgsProject.instance()

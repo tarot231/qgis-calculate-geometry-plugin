@@ -1,4 +1,4 @@
-# CalculateGeometry
+# Calculate Geometry
 
 This plugin calculates the area of the polygon and the length of the line, in arbitrary units. Compared to using field calculator, you don't need to type calculation expressions and unit conversion factor, so you can get results with fewer steps.
 
