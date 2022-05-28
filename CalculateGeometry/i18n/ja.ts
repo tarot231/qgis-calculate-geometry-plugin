@@ -1,36 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="2.0">
+<!DOCTYPE TS>
+<TS version="2.1">
 <context>
     <name>CalculateGeometry</name>
     <message>
-        <location filename="../CalculateGeometry.py" line="43"/>
+        <location filename="../CalculateGeometry.py" line="44"/>
         <source>Calculate Geometry</source>
         <translation>ジオメトリ演算</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="69"/>
+        <location filename="../CalculateGeometry.py" line="46"/>
+        <source>…</source>
+        <translation>...</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometry.py" line="72"/>
         <source>Unsupported geometry type</source>
         <translation>サポートされていないジオメトリタイプです</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="73"/>
+        <location filename="../CalculateGeometry.py" line="76"/>
         <source>Invalid CRS</source>
         <translation>不正な座標参照系です</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="93"/>
+        <location filename="../CalculateGeometry.py" line="96"/>
         <source>Custom ({})</source>
         <translation>カスタム ({})</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="95"/>
+        <location filename="../CalculateGeometry.py" line="98"/>
         <source>None / Planimetric</source>
         <translation>None / Planimetric</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="180"/>
+        <location filename="../CalculateGeometry.py" line="184"/>
         <source>Actual field &quot;{}&quot; could not be processed</source>
-        <translation>実フィールド &quot;{}&quot; は処理できませんでした</translation>
+        <translation>実フィールド &amp;quot;{}&amp;quot; は処理できませんでした</translation>
     </message>
 </context>
 <context>
@@ -119,11 +125,6 @@
         <location filename="../CalculateGeometryUI.py" line="172"/>
         <source>Use virtual field for new field</source>
         <translation>仮想フィールドを新規フィールドに使用する</translation>
-    </message>
-    <message>
-        <location filename="../CalculateGeometryUI.py" line="193"/>
-        <source>Calculate Geometry</source>
-        <translation>ジオメトリ演算</translation>
     </message>
 </context>
 </TS>

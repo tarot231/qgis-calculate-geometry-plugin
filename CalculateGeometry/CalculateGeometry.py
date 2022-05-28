@@ -23,6 +23,7 @@
 
 import os
 from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import *
 from qgis.core import *
 from qgis.gui import QgsProjectionSelectionWidget
@@ -41,7 +42,8 @@ class CalculateGeometry(QObject):
 
     def initGui(self):
         self.plugin_name = self.tr('Calculate Geometry')
-        self.plugin_act = QAction(self.plugin_name + '…')
+        icon = QIcon(os.path.join(os.path.dirname(__file__), 'icon.svg'))
+        self.plugin_act = QAction(icon, self.plugin_name + self.tr('…'))
         self.plugin_act.triggered.connect(self.run)
         self.iface.addCustomActionForLayerType(self.plugin_act, None,
                 QgsMapLayer.VectorLayer, True)
@@ -52,7 +54,8 @@ class CalculateGeometry(QObject):
 
     def run(self):
         if self.dialog is None:
-            self.dialog = CalculateGeometryDialog()
+            self.dialog = CalculateGeometryDialog(parent=self.iface.mainWindow())
+            self.dialog.setWindowTitle(self.plugin_name)
             self.dialog.checks.buttonToggled.connect(self.checks_toggled)
             self.dialog.radios.buttonClicked.connect(self.system_changed)
             self.dialog.selectorCrs.crsChanged.connect(self.system_changed)
@@ -111,8 +114,9 @@ class CalculateGeometry(QObject):
             self.dialog.checkVirtual.setEnabled(False)
             self.dialog.checkVirtual.setChecked(True)
 
-        self.dialog.reset_standard_buttons()
         self.dialog.setMinimumHeight(0)
+        for b in self.dialog.buttonBox.buttons():
+            b.setAttribute(Qt.WA_UnderMouse, False)
 
         result = self.dialog.exec()
         if result == QDialog.Rejected:
@@ -192,6 +196,8 @@ class CalculateGeometry(QObject):
                 prec = None
             return prec
 
+        layer.undoStack().beginMacro(self.plugin_name)
+
         if layer.geometryType() == QgsWkbTypes.PointGeometry:
             row = self.dialog.rowXcoord
             if row[0].isChecked() and row[1].currentText():
@@ -230,6 +236,8 @@ class CalculateGeometry(QObject):
                             du, row[2].currentData())
                     process_exp('perimeter', row[1].currentText(),
                             get_prec(row[3]), conv_factor)
+
+        layer.undoStack().endMacro()
 
         self.iface.actionDraw().trigger()
 

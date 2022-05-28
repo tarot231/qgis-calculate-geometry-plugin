@@ -182,6 +182,7 @@ class CalculateGeometryDialog(QDialog):
         form.addRow(self.checkVirtual)
 
         self.buttonBox = QDialogButtonBox(
+                QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
                 accepted=self.accept, rejected=self.reject)
 
         vbox = QVBoxLayout()
@@ -190,12 +191,6 @@ class CalculateGeometryDialog(QDialog):
 
         self.setLayout(vbox)
         self.setMaximumSize(QWIDGETSIZE_MAX, 0)
-        self.setWindowTitle(self.tr('Calculate Geometry'))
-
-    def reset_standard_buttons(self):
-        self.buttonBox.clear()
-        self.buttonBox.setStandardButtons(
-                QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
     def prepare_rows(self, rows):
         for row in self.rows:
@@ -223,5 +218,4 @@ class CalculateGeometryDialog(QDialog):
 if __name__ == '__main__':
     app = QApplication([])
     w = CalculateGeometryDialog()
-    w.show()
-    app.exec()
+    w.exec()
