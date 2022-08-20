@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QFont, QFontMetrics, QIntValidator
 from qgis.PyQt.QtWidgets import *
 from qgis.core import QgsUnitTypes, QgsCoordinateReferenceSystem
-from qgis.gui import QgsProjectionSelectionWidget
+from qgis.gui import QgsProjectionSelectionWidget, QgsFilterLineEdit
 
 
 distance_units = (QgsUnitTypes.DistanceMeters,
@@ -37,7 +37,7 @@ distance_units = (QgsUnitTypes.DistanceMeters,
                   QgsUnitTypes.DistanceCentimeters,
                   QgsUnitTypes.DistanceMillimeters,
                   QgsUnitTypes.DistanceDegrees,
-                  QgsUnitTypes.DistanceUnknownUnit,)
+                  QgsUnitTypes.DistanceUnknownUnit)
 area_units     = (QgsUnitTypes.AreaSquareMeters,
                   QgsUnitTypes.AreaSquareKilometers,
                   QgsUnitTypes.AreaSquareFeet,
@@ -49,7 +49,7 @@ area_units     = (QgsUnitTypes.AreaSquareMeters,
                   QgsUnitTypes.AreaSquareCentimeters,
                   QgsUnitTypes.AreaSquareMillimeters,
                   QgsUnitTypes.AreaSquareDegrees,
-                  QgsUnitTypes.AreaUnknownUnit,)
+                  QgsUnitTypes.AreaUnknownUnit)
 
 
 class FramedLabel(QLabel):
@@ -60,7 +60,7 @@ class FramedLabel(QLabel):
         self.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
 
-class PrecisionEdit(QLineEdit):
+class PrecisionEdit(QgsFilterLineEdit):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -70,6 +70,9 @@ class PrecisionEdit(QLineEdit):
 class CalculateGeometryDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
+
+        scale_factor = QApplication.instance().primaryScreen() \
+                            .logicalDotsPerInch() / 96
 
         def create_editable_combobox(text):
             combo = QComboBox()
@@ -114,11 +117,10 @@ class CalculateGeometryDialog(QDialog):
         grid = QGridLayout()
         grid.addWidget(QLabel(self.tr('Field')), 0, 1)
         grid.addWidget(QLabel(self.tr('Units')), 0, 2)
-        grid.addWidget(QLabel(self.tr('Precision')), 0, 3)
+        label_prec = QLabel(self.tr('Precision'))
+        grid.addWidget(label_prec, 0, 3)
         grid.itemAtPosition(0, 3).widget().show()
-        width = grid.itemAtPosition(0, 3).geometry().width()
-        if width < QFontMetrics(QFont()).height() * 3:
-            width = QFontMetrics(QFont()).height() * 3
+        width = int(QFontMetrics(QFont()).height() * scale_factor * 3)
         self.rows = (self.rowXcoord,
                      self.rowYcoord,
                      self.rowZcoord,
@@ -128,8 +130,8 @@ class CalculateGeometryDialog(QDialog):
                      self.rowPerimeter,)
         for row, w in enumerate(self.rows):
             w[0].setChecked(True)
-            w[1].setMinimumWidth(QFontMetrics(QFont()).height() * 9)
-            w[3].setFixedWidth(width)
+            w[1].setMinimumWidth(width * 2)
+            w[3].setMaximumWidth(max(width, label_prec.width()))
             for col in range(len(w)):
                 grid.addWidget(w[col], row + 1, col)
         for col in (1, 2):
@@ -148,7 +150,7 @@ class CalculateGeometryDialog(QDialog):
         self.radios.addButton(self.radio2)
 
         self.selectorCrs = QgsProjectionSelectionWidget()
-        self.selectorCrs.setMinimumWidth(QFontMetrics(QFont()).height() * 28)
+        self.selectorCrs.setMinimumWidth(width * 8)
         self.selectorCrs.setOptionVisible(
                 QgsProjectionSelectionWidget.CurrentCrs, False)
         self.selectorCrs.setLayerCrs(QgsCoordinateReferenceSystem('EPSG:4326'))
@@ -169,16 +171,19 @@ class CalculateGeometryDialog(QDialog):
         groupSystem.setLayout(grid)
 
         self.checkSelected = QCheckBox(self.tr('Selected features only'))
+        self.checkDefault = QCheckBox(self.tr('Set expression to default value'))
         self.checkVirtual = QCheckBox(self.tr('Use virtual field for new field'))
         self.checks = QButtonGroup()
         self.checks.setExclusive(False)
         self.checks.addButton(self.checkSelected)
+        self.checks.addButton(self.checkDefault)
         self.checks.addButton(self.checkVirtual)
 
         form = QFormLayout()
         form.addRow(groupProp)
         form.addRow(groupSystem)
         form.addRow(self.checkSelected)
+        form.addRow(self.checkDefault)
         form.addRow(self.checkVirtual)
 
         self.buttonBox = QDialogButtonBox(

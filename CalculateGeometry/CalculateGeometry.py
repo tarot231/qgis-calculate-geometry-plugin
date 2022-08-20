@@ -104,13 +104,15 @@ class CalculateGeometry(QObject):
             self.dialog.radio1.setChecked(True)
 
         self.is_selected = bool(layer.selectedFeatureCount())
-        self.dialog.checkVirtual.setEnabled(True)
-        self.dialog.checkSelected.setEnabled(self.is_selected)
-        self.dialog.checkSelected.setChecked(self.is_selected)
-
+        if not self.is_selected:
+            self.dialog.checkSelected.setChecked(False)
+        if not self.dialog.checks.checkedButton():
+            self.dialog.checkSelected.setEnabled(self.is_selected)
+            self.dialog.checkDefault.setEnabled(True)
+            self.dialog.checkVirtual.setEnabled(True)
         dp = layer.dataProvider()
-        if not dp.capabilities() & dp.ChangeAttributeValues \
-                or layer.readOnly():
+        if (not dp.capabilities() & dp.ChangeAttributeValues
+                or layer.readOnly()):
             self.dialog.checkVirtual.setEnabled(False)
             self.dialog.checkVirtual.setChecked(True)
 
@@ -174,11 +176,16 @@ class CalculateGeometry(QObject):
                 features = (layer.selectedFeatures()
                             if self.dialog.checkSelected.isChecked() else
                             layer.getFeatures())
+                res = True
                 for f in features:
                     context.setFeature(f)
-                    res = layer.changeAttributeValue(f.id(), idx,
-                            QgsExpression(expstr).evaluate(context))
+                    res &= layer.changeAttributeValue(f.id(), idx,
+                            QgsExpression(expstr).evaluate(context),
+                            None, True)
                 if res:
+                    if self.dialog.checkDefault.isChecked():
+                        default = QgsDefaultValue(expstr, True)
+                        layer.setDefaultValueDefinition(idx, default)
                     return
 
             self.iface.messageBar().pushWarning(self.plugin_name,
@@ -242,13 +249,15 @@ class CalculateGeometry(QObject):
         self.iface.actionDraw().trigger()
 
     def checks_toggled(self, button, checked):
+        wasBlocked = self.dialog.checks.blockSignals(True)
         for b in self.dialog.checks.buttons():
             if not b is button:
                 if checked:
                     b.setEnabled(False)
                     b.setChecked(False)
-                elif self.is_selected:
+                elif not b is self.dialog.checkSelected or self.is_selected:
                     b.setEnabled(True)
+        self.dialog.checks.blockSignals(wasBlocked)
 
     def system_changed(self):
         if self.dialog.rowXcoord[2].isVisibleTo(self.dialog):

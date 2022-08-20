@@ -34,7 +34,7 @@
         <translation>None / Planimetric</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometry.py" line="184"/>
+        <location filename="../CalculateGeometry.py" line="191"/>
         <source>Actual field &quot;{}&quot; could not be processed</source>
         <translation>実フィールド &amp;quot;{}&amp;quot; は処理できませんでした</translation>
     </message>
@@ -42,87 +42,92 @@
 <context>
     <name>CalculateGeometryDialog</name>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="84"/>
+        <location filename="../CalculateGeometryUI.py" line="87"/>
         <source>X Coordinate</source>
         <translation>X 座標</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="85"/>
+        <location filename="../CalculateGeometryUI.py" line="88"/>
         <source>Y Coordinate</source>
         <translation>Y 座標</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="86"/>
+        <location filename="../CalculateGeometryUI.py" line="89"/>
         <source>Z Coordinate</source>
         <translation>Z 座標</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="87"/>
+        <location filename="../CalculateGeometryUI.py" line="90"/>
         <source>M Value</source>
         <translation>M 値</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="99"/>
+        <location filename="../CalculateGeometryUI.py" line="102"/>
         <source>Length</source>
         <translation>長さ</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="104"/>
+        <location filename="../CalculateGeometryUI.py" line="107"/>
         <source>Area</source>
         <translation>面積</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="107"/>
+        <location filename="../CalculateGeometryUI.py" line="110"/>
         <source>Map Units</source>
         <translation>地図単位</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="109"/>
+        <location filename="../CalculateGeometryUI.py" line="112"/>
         <source>Perimeter</source>
         <translation>周長</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="115"/>
+        <location filename="../CalculateGeometryUI.py" line="118"/>
         <source>Field</source>
         <translation>フィールド</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="116"/>
+        <location filename="../CalculateGeometryUI.py" line="119"/>
         <source>Units</source>
         <translation>単位</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="117"/>
+        <location filename="../CalculateGeometryUI.py" line="120"/>
         <source>Precision</source>
         <translation>精度</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="138"/>
+        <location filename="../CalculateGeometryUI.py" line="140"/>
         <source>Properties</source>
         <translation>プロパティ</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="141"/>
+        <location filename="../CalculateGeometryUI.py" line="143"/>
         <source>Cartesian calculation with following CRS</source>
         <translation>デカルト計算で次の座標参照系を用いる</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="144"/>
+        <location filename="../CalculateGeometryUI.py" line="146"/>
         <source>Ellipsoidal calculation with following ellipsoid</source>
         <translation>楕円体計算で次の回転楕円体を用いる</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="168"/>
+        <location filename="../CalculateGeometryUI.py" line="170"/>
         <source>Calculation System</source>
         <translation>計算方式</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="171"/>
+        <location filename="../CalculateGeometryUI.py" line="173"/>
         <source>Selected features only</source>
         <translation>選択された地物のみ</translation>
     </message>
     <message>
-        <location filename="../CalculateGeometryUI.py" line="172"/>
+        <location filename="../CalculateGeometryUI.py" line="174"/>
+        <source>Set expression to default value</source>
+        <translation>デフォルト値に式を設定する</translation>
+    </message>
+    <message>
+        <location filename="../CalculateGeometryUI.py" line="175"/>
         <source>Use virtual field for new field</source>
         <translation>仮想フィールドを新規フィールドに使用する</translation>
     </message>
