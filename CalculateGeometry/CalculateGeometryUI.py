@@ -22,7 +22,7 @@
 """
 
 from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtGui import QFont, QFontMetrics, QIntValidator
+from qgis.PyQt.QtGui import QIntValidator
 from qgis.PyQt.QtWidgets import *
 from qgis.core import QgsUnitTypes, QgsCoordinateReferenceSystem
 from qgis.gui import QgsProjectionSelectionWidget, QgsFilterLineEdit
@@ -64,15 +64,15 @@ class PrecisionEdit(QgsFilterLineEdit):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.setMaxLength(2)
         self.setValidator(QIntValidator(-99, 99))
 
 
 class CalculateGeometryDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-
-        scale_factor = QApplication.instance().primaryScreen() \
-                            .logicalDotsPerInch() / 96
+        self.adjustSize()
+        base_width = self.fontInfo().pixelSize() * 4
 
         def create_editable_combobox(text):
             combo = QComboBox()
@@ -117,10 +117,7 @@ class CalculateGeometryDialog(QDialog):
         grid = QGridLayout()
         grid.addWidget(QLabel(self.tr('Field')), 0, 1)
         grid.addWidget(QLabel(self.tr('Units')), 0, 2)
-        label_prec = QLabel(self.tr('Precision'))
-        grid.addWidget(label_prec, 0, 3)
-        grid.itemAtPosition(0, 3).widget().show()
-        width = int(QFontMetrics(QFont()).height() * scale_factor * 3)
+        grid.addWidget(QLabel(self.tr('Precision')), 0, 3)
         self.rows = (self.rowXcoord,
                      self.rowYcoord,
                      self.rowZcoord,
@@ -130,12 +127,12 @@ class CalculateGeometryDialog(QDialog):
                      self.rowPerimeter,)
         for row, w in enumerate(self.rows):
             w[0].setChecked(True)
-            w[1].setMinimumWidth(width * 2)
-            w[3].setMaximumWidth(max(width, label_prec.width()))
+            w[1].setMinimumWidth(base_width * 2)
+            w[3].setMinimumWidth(base_width)
             for col in range(len(w)):
                 grid.addWidget(w[col], row + 1, col)
-        for col in (1, 2):
-            grid.setColumnStretch(col, 1)
+        for col, factor in enumerate((0, 10000, 10000, 1)):
+            grid.setColumnStretch(col, factor)
 
         groupProp = QGroupBox(self.tr('Properties'))
         groupProp.setLayout(grid)
@@ -150,7 +147,7 @@ class CalculateGeometryDialog(QDialog):
         self.radios.addButton(self.radio2)
 
         self.selectorCrs = QgsProjectionSelectionWidget()
-        self.selectorCrs.setMinimumWidth(width * 8)
+        self.selectorCrs.setMinimumWidth(base_width * 8)
         self.selectorCrs.setOptionVisible(
                 QgsProjectionSelectionWidget.CurrentCrs, False)
         self.selectorCrs.setLayerCrs(QgsCoordinateReferenceSystem('EPSG:4326'))
