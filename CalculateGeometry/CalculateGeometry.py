@@ -36,9 +36,10 @@ class CalculateGeometry(QObject):
         super().__init__()
         self.iface = iface
         self.translator = QTranslator()
-        if self.translator.load(QLocale(QgsApplication.locale()),
-                '', '', os.path.join(os.path.dirname(__file__), 'i18n')):
-            qApp.installTranslator(self.translator)
+        if self.translator.load(
+                QSettings().value('locale/userLocale', QLocale().name()),
+                os.path.join(os.path.dirname(__file__), 'i18n')):
+            QCoreApplication.installTranslator(self.translator)
 
     def initGui(self):
         self.plugin_name = self.tr('Calculate Geometry')
@@ -155,13 +156,15 @@ class CalculateGeometry(QObject):
 
             idx = layer.fields().indexOf(field_name)
             if idx == -1:
+                double = QVariant.Double
                 if virtual:
-                    layer.addExpressionField(expstr,
-                            QgsField(field_name, QVariant.Double))
+                    layer.addExpressionField(expstr, QgsField(field_name,
+                            double, QVariant.typeToName(double)))
                     return
                 else:
                     layer.startEditing()
-                    layer.addAttribute(QgsField(field_name, QVariant.Double))
+                    layer.addAttribute(QgsField(field_name,
+                            double, QVariant.typeToName(double)))
                     idx = layer.fields().indexOf(field_name)
 
             if layer.fields().fieldOrigin(idx) == QgsFields.OriginExpression:
@@ -185,7 +188,9 @@ class CalculateGeometry(QObject):
                 if res:
                     if self.dialog.checkDefault.isChecked():
                         default = QgsDefaultValue(expstr, True)
-                        layer.setDefaultValueDefinition(idx, default)
+                    else:
+                        default = QgsDefaultValue()
+                    layer.setDefaultValueDefinition(idx, default)
                     return
 
             self.iface.messageBar().pushWarning(self.plugin_name,
@@ -221,7 +226,10 @@ class CalculateGeometry(QObject):
                 if row[0].isChecked() and row[1].currentText():
                     process_exp('m', row[1].currentText(), get_prec(row[3]))
         else:
-            du = layer.sourceCrs().mapUnits()
+            if transform:
+                du = self.dialog.selectorCrs.crs().mapUnits()
+            else:
+                du = layer.crs().mapUnits()
             if layer.geometryType() == QgsWkbTypes.LineGeometry:
                 row = self.dialog.rowLength
                 if row[0].isChecked() and row[1].currentText():

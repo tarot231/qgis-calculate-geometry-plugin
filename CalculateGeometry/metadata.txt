@@ -5,8 +5,11 @@ description=Calculates area, length, in arbitrary units, without typing expressi
 description[ja]=面積や長さの計算を任意の単位で式を入力せずに行います
 about=This plugin calculates the area of the polygon and the length of the line, in arbitrary units. Compared to using field calculator, you don't need to type calculation expressions and unit conversion factor, so you can get results with fewer steps. It runs from the context menu of the vector layer in the Layers panel.
 about[ja]=このプラグインは、ポリゴンの面積やラインの長さを任意の単位で計算します。フィールド計算機と比べて、計算式や単位換算係数を入力する必要がないため、少ない手順で結果を得ることができます。レイヤパネルにあるベクタレイヤのコンテキストメニューから実行します。
-version=0.6.8
+version=0.6.9
 changelog=
+ 0.6.9
+  - Fixed calculation when converting between lat/lon and X/Y
+  - Clear default value expression if unchecked
  0.6.8
   - Fixed dialog to be DPI independent as possible again
  0.6.7
@@ -29,11 +32,11 @@ changelog=
  0.6
   - Calculate multiple geometry properties at once
   - Support ellipsoidal calculation system
-  - Support virtual layer (#3)
+  - Support virtual field (#3)
   - Drop support for QGIS 2
 author=Tarot Osuji
 email=tarot@sdf.org
-homepage=https://github.com/tarot231/qgis-calculate-geometry-plugin
+homepage=https://plugins.qgis.org/plugins/CalculateGeometry
 tracker=https://github.com/tarot231/qgis-calculate-geometry-plugin/issues
 repository=https://github.com/tarot231/qgis-calculate-geometry-plugin
 tags=calculator, geometry
