@@ -1,3 +1,3 @@
-SOURCES = ../CalculateGeometry.py \
-          ../CalculateGeometryUI.py
+SOURCES = ../__init__.py \
+          ../ui.py
 TRANSLATIONS = ja.ts

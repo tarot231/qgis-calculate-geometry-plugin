@@ -24,64 +24,45 @@
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIntValidator
 from qgis.PyQt.QtWidgets import *
-from qgis.core import QgsUnitTypes, QgsCoordinateReferenceSystem
+from qgis.core import QgsUnitTypes
 from qgis.gui import QgsProjectionSelectionWidget, QgsFilterLineEdit
-
-
-distance_units = (QgsUnitTypes.DistanceMeters,
-                  QgsUnitTypes.DistanceKilometers,
-                  QgsUnitTypes.DistanceFeet,
-                  QgsUnitTypes.DistanceYards,
-                  QgsUnitTypes.DistanceMiles,
-                  QgsUnitTypes.DistanceNauticalMiles,
-                  QgsUnitTypes.DistanceCentimeters,
-                  QgsUnitTypes.DistanceMillimeters,
-                  QgsUnitTypes.DistanceDegrees,
-                  QgsUnitTypes.DistanceUnknownUnit)
-area_units     = (QgsUnitTypes.AreaSquareMeters,
-                  QgsUnitTypes.AreaSquareKilometers,
-                  QgsUnitTypes.AreaSquareFeet,
-                  QgsUnitTypes.AreaSquareYards,
-                  QgsUnitTypes.AreaSquareMiles,
-                  QgsUnitTypes.AreaHectares,
-                  QgsUnitTypes.AreaAcres,
-                  QgsUnitTypes.AreaSquareNauticalMiles,
-                  QgsUnitTypes.AreaSquareCentimeters,
-                  QgsUnitTypes.AreaSquareMillimeters,
-                  QgsUnitTypes.AreaSquareDegrees,
-                  QgsUnitTypes.AreaUnknownUnit)
+if __package__:
+    from .units import distance_units, area_units
+else:
+    from units import distance_units, area_units
 
 
 class FramedLabel(QLabel):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self):
+        super().__init__()
 
         self.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
         self.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
 
-class PrecisionEdit(QgsFilterLineEdit):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class EditableComboBox(QComboBox):
+    def __init__(self, text):
+        super().__init__()
 
-        self.setMaxLength(2)
-        self.setValidator(QIntValidator(-99, 99))
+        self.setEditable(True)
+        self.setEditText(text)
+
+
+class PrecisionEdit(QgsFilterLineEdit):
+    def __init__(self):
+        super().__init__()
+
+        self.setValidator(QIntValidator(-9, 9, self))
 
 
 class CalculateGeometryDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.adjustSize()
-        base_width = self.fontInfo().pixelSize() * 4
-
-        def create_editable_combobox(text):
-            combo = QComboBox()
-            combo.setEditable(True)
-            combo.setEditText(text)
-            return combo
+        self.base_width = self.fontInfo().pixelSize() * 4
 
         cols = lambda cx, lx: \
-                (QCheckBox(cx), create_editable_combobox(lx),
+                (QCheckBox(cx), EditableComboBox(lx),
                  FramedLabel(), PrecisionEdit())
 
         self.rowXcoord = cols(self.tr('X Coordinate'), 'xcoord')
@@ -96,7 +77,7 @@ class CalculateGeometryDialog(QDialog):
         self.rowMvalue[2].setText(QgsUnitTypes.toString(unit).title())
 
         cols = lambda cx, lx: \
-                (QCheckBox(cx), create_editable_combobox(lx),
+                (QCheckBox(cx), EditableComboBox(lx),
                  QComboBox(), PrecisionEdit())
 
         self.rowLength = cols(self.tr('Length'), 'length')
@@ -127,8 +108,8 @@ class CalculateGeometryDialog(QDialog):
                      self.rowPerimeter,)
         for row, w in enumerate(self.rows):
             w[0].setChecked(True)
-            w[1].setMinimumWidth(base_width * 2)
-            w[3].setMinimumWidth(base_width)
+            w[1].setMinimumWidth(self.base_width * 2)
+            w[3].setMinimumWidth(self.base_width)
             for col in range(len(w)):
                 grid.addWidget(w[col], row + 1, col)
         for col, factor in enumerate((0, 10000, 10000, 1)):
@@ -146,26 +127,18 @@ class CalculateGeometryDialog(QDialog):
         self.radios.addButton(self.radio1)
         self.radios.addButton(self.radio2)
 
-        self.selectorCrs = QgsProjectionSelectionWidget()
-        self.selectorCrs.setMinimumWidth(base_width * 8)
-        self.selectorCrs.setOptionVisible(
-                QgsProjectionSelectionWidget.CurrentCrs, False)
-        self.selectorCrs.setLayerCrs(QgsCoordinateReferenceSystem('EPSG:4326'))
-        self.comboCrs = self.selectorCrs.layout().itemAt(0).widget()
-        self.comboCrs.setCurrentIndex(
-                self.comboCrs.findData(QgsProjectionSelectionWidget.LayerCrs))
         self.labelEllips = FramedLabel()
 
-        grid = QGridLayout()
-        grid.addWidget(self.radio1, 0, 0, 1, 0)
-        grid.addWidget(self.selectorCrs, 1, 1)
-        grid.addWidget(self.radio2, 2, 0, 1, 0)
-        grid.addWidget(self.labelEllips, 3, 1)
-        grid.setColumnMinimumWidth(0, QRadioButton().sizeHint().width())
-        grid.setRowMinimumHeight(3, QLineEdit().sizeHint().height())
+        self.grid = QGridLayout()
+        self.grid.addWidget(self.radio1, 0, 0, 1, 0)
+        #self.grid.addWidget(self.selectorCrs, 1, 1)
+        self.grid.addWidget(self.radio2, 2, 0, 1, 0)
+        self.grid.addWidget(self.labelEllips, 3, 1)
+        self.grid.setColumnMinimumWidth(0, QRadioButton().sizeHint().width())
+        self.grid.setRowMinimumHeight(3, QLineEdit().sizeHint().height())
 
         groupSystem = QGroupBox(self.tr('Calculation System'))
-        groupSystem.setLayout(grid)
+        groupSystem.setLayout(self.grid)
 
         self.checkSelected = QCheckBox(self.tr('Selected features only'))
         self.checkDefault = QCheckBox(self.tr('Set expression to default value'))
@@ -216,8 +189,19 @@ class CalculateGeometryDialog(QDialog):
     def prepare_for_polygon(self):
         self.prepare_rows([self.rowArea, self.rowPerimeter])
 
+    def get_crs(self):
+        return self.selectorCrs.crs()
+
+    def reset_crs(self, crs=None):
+        self.selectorCrs = QgsProjectionSelectionWidget()
+        self.selectorCrs.setMinimumWidth(self.base_width * 8)
+        self.grid.addWidget(self.selectorCrs, 1, 1)
+        if crs:
+            self.selectorCrs.setCrs(crs)
+
 
 if __name__ == '__main__':
     app = QApplication([])
     w = CalculateGeometryDialog()
+    w.reset_crs()
     w.exec()
