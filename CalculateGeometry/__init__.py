@@ -113,10 +113,10 @@ class CalculateGeometry(QObject):
 
         self.dialog.setMinimumHeight(0)
         for b in self.dialog.buttonBox.buttons():
-            b.setAttribute(Qt.WA_UnderMouse, False)
+            b.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, False)
 
         result = self.dialog.exec()
-        if result == QDialog.Rejected:
+        if result == QDialog.DialogCode.Rejected:
             return
 
         # transform  0: layer  -1: project  1: crs
@@ -151,7 +151,7 @@ class CalculateGeometry(QObject):
             idx = layer.fields().indexOf(field_name)
             if idx == -1:
                 field = QgsField(field_name,
-                                 QMetaType.Double
+                                 QMetaType.Type.Double
                                  if Qgis.QGIS_VERSION_INT >= 33800 else
                                  QVariant.Double,
                                  'double')

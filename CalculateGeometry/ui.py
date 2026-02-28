@@ -36,8 +36,8 @@ class FramedLabel(QLabel):
     def __init__(self):
         super().__init__()
 
-        self.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-        self.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Sunken)
+        self.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
 
 
 class EditableComboBox(QComboBox):
@@ -157,7 +157,7 @@ class CalculateGeometryDialog(QDialog):
         form.addRow(self.checkVirtual)
 
         self.buttonBox = QDialogButtonBox(
-                QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
+                QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel,
                 accepted=self.accept, rejected=self.reject)
 
         vbox = QVBoxLayout()
